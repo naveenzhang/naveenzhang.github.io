@@ -290,20 +290,106 @@
         
           
             <p>##Mysql Galera Cluster</p>
-<p>###准备环境<br>修改网卡配置</p>
+<p>###准备环境</p>
+<p>修改网卡配置</p>
 <pre><code>/etc/sysconfig/network-scripts
-</code></pre><p>修改hosts文件<br>    /etc/hosts<br>    192.168.3.101   db1<br>    192.168.3.102   db2<br>    192.168.3.103   db3<br>关闭防火墙及selinux<br>    /etc/init.d/iptables stop<br>    chkconfig iptables off<br>    setenforce 0</p>
-<p>###Add MariaDB Repositories<br>    vi /etc/yum.repos.d/mariadb.repo<br>    [mariadb]<br>    name = MariaDB<br>    baseurl = <a href="http://yum.mariadb.org/10.0/centos6-amd64" target="_blank" rel="external">http://yum.mariadb.org/10.0/centos6-amd64</a><br>    gpgkey=<a href="https://yum.mariadb.org/RPM-GPG-KEY-MariaDB" target="_blank" rel="external">https://yum.mariadb.org/RPM-GPG-KEY-MariaDB</a><br>    gpgcheck=1</p>
-<p>###Install MariaDB Galera Cluster 10.0 software</p>
+</code></pre><p>修改hosts文件</p>
+<pre><code>/etc/hosts
+192.168.3.101   db1
+192.168.3.102   db2
+192.168.3.103   db3
+</code></pre><p>关闭防火墙及selinux</p>
+<pre><code>/etc/init.d/iptables stop
+chkconfig iptables off
+setenforce 0
+</code></pre><p>###Add MariaDB Repositories</p>
+<pre><code>vi /etc/yum.repos.d/mariadb.repo 
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.0/centos6-amd64
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+</code></pre><p>###Install MariaDB Galera Cluster 10.0 software</p>
 <pre><code>sudo yum install http://dl.fedoraproject.org/pub/epel/6/x86_64/socat-1.7.2.3-1.el6.x86_64.rpm -y
 sudo yum install MariaDB-Galera-server MariaDB-client rsync galera -y 
-</code></pre><p>###Setup MariaDB security<br>    sudo service mysql start<br>    sudo /usr/bin/mysql_secure_installation</p>
-<p>###Create MariaDB Galera Cluster users （都操作）<br>    mysql -u root -p<br>    mysql&gt; DELETE FROM mysql.user WHERE user=’’;<br>    mysql&gt; GRANT ALL ON <em>.</em> TO ‘root’@’%’ IDENTIFIED BY ‘123456’;<br>    mysql&gt; GRANT USAGE ON <em>.</em> to sst_user@’%’ IDENTIFIED BY ‘123456’;<br>    mysql&gt; GRANT ALL PRIVILEGES on <em>.</em> to sst_user@’%’;<br>    mysql&gt; FLUSH PRIVILEGES;<br>    mysql&gt; quit</p>
-<p>###Create the MariaDB Galera Cluster config<br>    service mysql stop  #all host stop</p>
-<p>#####db1 conf<br>    cat &gt;&gt; /etc/my.cnf.d/server.cnf &lt;&lt; EOF<br>    binlog_format=ROW<br>    default-storage-engine=innodb<br>    innodb_autoinc_lock_mode=2<br>    innodb_locks_unsafe_for_binlog=1<br>    query_cache_size=0<br>    query_cache_type=0<br>    bind-address=0.0.0.0<br>    datadir=/var/lib/mysql<br>    innodb_log_file_size=100M<br>    innodb_file_per_table<br>    innodb_flush_log_at_trx_commit=2<br>    wsrep_provider=/usr/lib64/galera/libgalera_smm.so<br>    wsrep_cluster_address=”gcomm://192.168.3.101,192.168.3.102,192.168.3.103”<br>    wsrep_cluster_name=’galera_cluster’<br>    wsrep_node_address=’192.168.3.101’<br>    wsrep_node_name=’db1’<br>    wsrep_sst_method=rsync<br>    wsrep_sst_auth=sst_user:123456<br>    EOF</p>
-<p>#####db2 conf<br>    cat &gt;&gt; /etc/my.cnf.d/server.cnf &lt;&lt; EOF<br>    binlog_format=ROW<br>    default-storage-engine=innodb<br>    innodb_autoinc_lock_mode=2<br>    innodb_locks_unsafe_for_binlog=1<br>    query_cache_size=0<br>    query_cache_type=0<br>    bind-address=0.0.0.0<br>    datadir=/var/lib/mysql<br>    innodb_log_file_size=100M<br>    innodb_file_per_table<br>    innodb_flush_log_at_trx_commit=2<br>    wsrep_provider=/usr/lib64/galera/libgalera_smm.so<br>    wsrep_cluster_address=”gcomm://192.168.3.101,192.168.3.102,192.168.3.103”<br>    wsrep_cluster_name=’galera_cluster’<br>    wsrep_node_address=’192.168.3.102’<br>    wsrep_node_name=’db2’<br>    wsrep_sst_method=rsync<br>    wsrep_sst_auth=sst_user:123456<br>    EOF</p>
-<p>#####db3 conf<br>    cat &gt;&gt; /etc/my.cnf.d/server.cnf &lt;&lt; EOF<br>    binlog_format=ROW<br>    default-storage-engine=innodb<br>    innodb_autoinc_lock_mode=2<br>    innodb_locks_unsafe_for_binlog=1<br>    query_cache_size=0<br>    query_cache_type=0<br>    bind-address=0.0.0.0<br>    datadir=/var/lib/mysql<br>    innodb_log_file_size=100M<br>    innodb_file_per_table<br>    innodb_flush_log_at_trx_commit=2<br>    wsrep_provider=/usr/lib64/galera/libgalera_smm.so<br>    wsrep_cluster_address=”gcomm://192.168.3.101,192.168.3.102,192.168.3.103”<br>    wsrep_cluster_name=’galera_cluster’<br>    wsrep_node_address=’192.168.3.103’<br>    wsrep_node_name=’db3’<br>    wsrep_sst_method=rsync<br>    wsrep_sst_auth=sst_user:123456<br>    EOF</p>
-<p>###Initialize the first cluster node<br>在db1 执行集群初始化</p>
+</code></pre><p>###Setup MariaDB security</p>
+<pre><code>sudo service mysql start
+sudo /usr/bin/mysql_secure_installation
+</code></pre><p>###Create MariaDB Galera Cluster users （都操作）</p>
+<pre><code>mysql -u root -p
+mysql&gt; DELETE FROM mysql.user WHERE user=&apos;&apos;;
+mysql&gt; GRANT ALL ON *.* TO &apos;root&apos;@&apos;%&apos; IDENTIFIED BY &apos;123456&apos;;
+mysql&gt; GRANT USAGE ON *.* to sst_user@&apos;%&apos; IDENTIFIED BY &apos;123456&apos;;
+mysql&gt; GRANT ALL PRIVILEGES on *.* to sst_user@&apos;%&apos;;
+mysql&gt; FLUSH PRIVILEGES;
+mysql&gt; quit
+</code></pre><p>###Create the MariaDB Galera Cluster config</p>
+<pre><code>service mysql stop  #all host stop
+</code></pre><p>#####db1 conf</p>
+<pre><code>cat &gt;&gt; /etc/my.cnf.d/server.cnf &lt;&lt; EOF
+binlog_format=ROW
+default-storage-engine=innodb
+innodb_autoinc_lock_mode=2
+innodb_locks_unsafe_for_binlog=1
+query_cache_size=0
+query_cache_type=0
+bind-address=0.0.0.0
+datadir=/var/lib/mysql
+innodb_log_file_size=100M
+innodb_file_per_table
+innodb_flush_log_at_trx_commit=2
+wsrep_provider=/usr/lib64/galera/libgalera_smm.so
+wsrep_cluster_address=&quot;gcomm://192.168.3.101,192.168.3.102,192.168.3.103&quot;
+wsrep_cluster_name=&apos;galera_cluster&apos;
+wsrep_node_address=&apos;192.168.3.101&apos;
+wsrep_node_name=&apos;db1&apos;
+wsrep_sst_method=rsync
+wsrep_sst_auth=sst_user:123456
+EOF
+</code></pre><p>#####db2 conf</p>
+<pre><code>cat &gt;&gt; /etc/my.cnf.d/server.cnf &lt;&lt; EOF
+binlog_format=ROW
+default-storage-engine=innodb
+innodb_autoinc_lock_mode=2
+innodb_locks_unsafe_for_binlog=1
+query_cache_size=0
+query_cache_type=0
+bind-address=0.0.0.0
+datadir=/var/lib/mysql
+innodb_log_file_size=100M
+innodb_file_per_table
+innodb_flush_log_at_trx_commit=2
+wsrep_provider=/usr/lib64/galera/libgalera_smm.so
+wsrep_cluster_address=&quot;gcomm://192.168.3.101,192.168.3.102,192.168.3.103&quot;
+wsrep_cluster_name=&apos;galera_cluster&apos;
+wsrep_node_address=&apos;192.168.3.102&apos;
+wsrep_node_name=&apos;db2&apos;
+wsrep_sst_method=rsync
+wsrep_sst_auth=sst_user:123456
+EOF
+</code></pre><p>#####db3 conf</p>
+<pre><code>cat &gt;&gt; /etc/my.cnf.d/server.cnf &lt;&lt; EOF
+binlog_format=ROW
+default-storage-engine=innodb
+innodb_autoinc_lock_mode=2
+innodb_locks_unsafe_for_binlog=1
+query_cache_size=0
+query_cache_type=0
+bind-address=0.0.0.0
+datadir=/var/lib/mysql
+innodb_log_file_size=100M
+innodb_file_per_table
+innodb_flush_log_at_trx_commit=2
+wsrep_provider=/usr/lib64/galera/libgalera_smm.so
+wsrep_cluster_address=&quot;gcomm://192.168.3.101,192.168.3.102,192.168.3.103&quot;
+wsrep_cluster_name=&apos;galera_cluster&apos;
+wsrep_node_address=&apos;192.168.3.103&apos;
+wsrep_node_name=&apos;db3&apos;
+wsrep_sst_method=rsync
+wsrep_sst_auth=sst_user:123456
+EOF
+</code></pre><p>###Initialize the first cluster node</p>
+<p>在db1 执行集群初始化</p>
 <pre><code>/etc/init.d/mysql start --wsrep-new-cluster
 </code></pre><p>在db1查询状态</p>
 <pre><code>[root@db1 ~]# mysql -uroot -p -e&quot;show status like     &apos;wsrep%&apos;&quot;
